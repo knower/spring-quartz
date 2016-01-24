@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!-- ====================job detail ==========================-->
+
+    <bean name="simpleJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="myBean"/>
+        <property name="targetMethod" value="printsMessage"/>
+    </bean>
+
+    <!--//TODO -->
+    <bean name="firstComplexJobDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="xyz.monkey.service.quartz.FirstScheduledJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="auotherBean" value-ref="auotherBean"/>
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <bean name="secondComplexJobDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="xyz.monkey.service.quartz.SecondScheduledJob"/>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!--=========================trigger start =====================-->
+
+    <!--简单触发器 配置作业的启动时间,触发器之间的延迟时间 以及 repeatInterval(频率)。-->
+    <bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="simpleJobDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="2000"/>
+    </bean>
+
+    <!--使用CronTriggerFactoryBean 允许你针对特定实例 选择计划方案 -->
+    <bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="firstComplexJobDetail"/>
+        <property name="cronExpression" value="0/5 * * ? * *"/>
+    </bean>
+
+    <!-- Always run at 20:00 everyday -->
+    <bean id="secondCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="secondComplexJobDetail"/>
+        <property name="cronExpression" value="0 0 20 ? * *"/>
+    </bean>
+
+
+    <!-- =================配置总调度任务==============================-->
+
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="jobDetails">
+            <list>
+                <ref bean="simpleJobDetail"/>
+                <ref bean="firstComplexJobDetail"/>
+                <ref bean="secondComplexJobDetail"/>
+            </list>
+        </property>
+
+        <property name="triggers">
+            <list>
+                <ref bean="simpleTrigger"/>
+                <ref bean="cronTrigger"/>
+                <ref bean="secondCronTrigger"/>
+            </list>
+        </property>
+    </bean>
+
+
+</beans>
